@@ -105,7 +105,7 @@ class PortfolioTest extends TestCase
         $this->actingAs($user)->get('/dashboard')->assertOk()->assertSee('Reichenbach');
         $response = $this->actingAs($user)->get('/dashboard?country='.$es->id)->assertOk();
         $this->assertSame(['properties' => 1, 'buildings' => 1, 'units' => 2, 'parties' => 3], $response->viewData('counts'));
-        $this->assertSame(['CHF' => ['rent' => '0.00', 'advance' => '260.00']], $this->actingAs($user)->get('/dashboard')->viewData('monthly'));
+        $this->assertSame(['CHF' => ['rent' => '2600.00', 'advance' => '260.00']], $this->actingAs($user)->get('/dashboard')->viewData('monthly'));
     }
 
     public function test_seed_portfolio_refuses_second_run(): void

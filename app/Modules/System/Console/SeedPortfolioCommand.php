@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
  * Legt die fünf bekannten Liegenschaften als Grundgerüst an.
  *
  * Enthält nur Angaben aus dem Auftrag und Daniels Klärungen (Phase 1).
- * Unbekanntes (Adressen, Mietbeginn, Nettomieten, Mieternamen) bleibt leer
+ * Unbekanntes (Adressen, Mieternamen, Beginn der Eigennutzung) bleibt leer
  * und wird in der Oberfläche ergänzt. Mietparteien werden als Platzhalter
  * angelegt, damit keine Personendaten im Quellcode stehen.
  */
@@ -58,8 +58,9 @@ class SeedPortfolioCommand extends Command
                 'street' => 'Buchholzstrasse 67', 'postal_code' => '3713', 'city' => 'Reichenbach im Kandertal',
                 'energy_supply' => 'Photovoltaikanlage; Zusammenschluss zum Eigenverbrauch (ZEV), Stromabrechnung über Zevvy (Standort «Oberland»).',
             ], [
-                ['EG', 'EG', UsageType::Studio, OccupancyType::Rental, $tenantEg, '130.00'],
-                ['OG', 'OG', UsageType::Apartment, OccupancyType::Rental, $tenantOg, '130.00'],
+                // Mietverträge HEV Bern: EG ab 1.2.2018, OG ab 1.4.2018
+                ['EG', 'EG', UsageType::Studio, OccupancyType::Rental, $tenantEg, '130.00', '1100.00', '2018-02-01'],
+                ['OG', 'OG', UsageType::Apartment, OccupancyType::Rental, $tenantOg, '130.00', '1500.00', '2018-04-01'],
                 ['DG', 'DG', UsageType::Apartment, OccupancyType::OwnerOccupied, $owner],
             ]);
 
@@ -85,7 +86,7 @@ class SeedPortfolioCommand extends Command
         return self::SUCCESS;
     }
 
-    /** @param list<array{0:string,1:?string,2:UsageType,3:OccupancyType,4:Party,5?:string}> $units */
+    /** @param list<array{0:string,1:?string,2:UsageType,3:OccupancyType,4:Party,5?:string,6?:string,7?:string}> $units */
     private function property(Country $country, string $name, PropertyType $type, ?OwnershipType $ownership, array $attrs, array $units): void
     {
         $property = Property::create(array_merge([
@@ -103,8 +104,10 @@ class SeedPortfolioCommand extends Command
                 'type' => $u[3],
                 'party_id' => $u[4]->id,
                 'advance_payment' => $u[5] ?? null,
+                'rent_net' => $u[6] ?? null,
+                'start_date' => $u[7] ?? null,
                 'currency' => isset($u[5]) ? $country->default_currency : null,
-                'notes' => 'Beginn offen – bitte ergänzen.',
+                'notes' => isset($u[7]) ? null : 'Beginn offen – bitte ergänzen.',
             ]);
         }
     }
