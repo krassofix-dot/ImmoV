@@ -1,0 +1,44 @@
+name: Release-Paket
+
+# Erzeugt das ZIP für deploy.command (Projekt 7 «ImmoV»).
+# Starten: GitHub → Actions → «Release-Paket» → «Run workflow» (oder Tag v* pushen).
+# Danach das Artefakt herunterladen, entpacken (ergibt die .zip-Datei) und
+# in ~/Downloads ablegen.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_mysql, zip, gd
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Tests vor dem Paketieren
+        run: |
+          composer install --no-interaction --no-progress --prefer-dist
+          npm ci --no-audit --no-fund && npm run build
+          cp .env.example .env && php artisan key:generate
+          php artisan test
+
+      - name: Paket bauen
+        run: bash deploy/build-release.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ImmoV-release
+          path: dist/*.zip
+          retention-days: 30
